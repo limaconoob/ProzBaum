@@ -1,7 +1,8 @@
 extern crate libc;
 
 mod ffi;
-use ffi::{Pid, Proz};
+use ffi::{Pid, Proz}; //ENUMS
+use ffi::{ProcBsdInfo}; //STRUCTS
 use ffi::{proc_pidpath, proc_listchildpids, proc_pidinfo};
 
 /*
@@ -67,19 +68,76 @@ char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
 proc_pidpath(pid, pathbuf, sizeof(pathbuf));
 */
 
+impl ProcBsdInfo
+{ pub fn new(/*proz: Vec<u8>*/) -> Self
+  { ProcBsdInfo
+    { pbi_flags:            0,//u8_to_u32(&proz, 0),
+      pbi_status:           0,
+      pbi_xstatus:          0,
+      pbi_pid:              0,
+      pbi_ppid:             0,
+      pbi_uid:              0,
+      pbi_gid:              0,
+      pbi_ruid:             0,
+      pbi_rgid:             0,
+      pbi_svuid:            0,
+      pbi_svgid:            0,
+      rfu_1:                0,
+      pbi_comm:             [0; Pid::MAXCOMLEN as usize],
+      pbi_name:             [0; 2 * Pid::MAXCOMLEN as usize],
+      pbi_nfiles:           0,
+      pbi_pgid:             0,
+      pbi_pjobc:            0,
+      e_tdev:               0,
+      e_tpgid:              0,
+      pbi_nice:             0,
+      pbi_start_tvsec:      0,
+      pbi_start_tvusec:     0, }}}
+
+fn u8_to_u64(c: &[u8], k: usize) -> libc::uint64_t
+{ let mut ret: u64 = 0;
+  {0..8}.all(|i|
+  { ret |= (c[i + k] as u64) << (i * 8);
+    true });
+  println!("ret::{}", ret);
+  ret }
+
+fn u8_to_u32(c: &[u8], k: usize) -> libc::uint32_t
+{ let mut ret: u32 = 0;
+  {0..4}.all(|i|
+  { ret |= (c[i + k] as u32) << (i * 8);
+  println!("c[{}]::{}", i, c[i + k]);
+    true });
+  println!("ret::{}", ret);
+  ret }
+
 //proc_pidinfo(father, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
+
+fn proc_get_info(pid: libc::pid_t) -> Option<ProcBsdInfo>
+{ unsafe
+  { let size = std::mem::size_of::<ProcBsdInfo>();
+    let mut proz: Vec<u8> = Vec::with_capacity(size);
+    let bonjour = proz.as_ptr() as *mut libc::c_void;
+    let ret = proc_pidinfo(pid, Pid::PROC_PIDTBSDINFO as i32, 0, bonjour, size as i32);
+    proz = Vec::from_raw_parts(bonjour as *mut u8, size, proz.capacity());
+    println!("pid::{}", pid);
+    //let bonjour = proz.clone();
+    for i in proz
+    { print!("{} ", i); }
+    let info = ProcBsdInfo::new();
+    Some(info)
+}}
 
 fn vec_pids(bonjour: *mut i32, connard: usize, the_vec: Vec<libc::pid_t>) -> Vec<libc::pid_t>
 { unsafe
   { let mut pids = Vec::from_raw_parts(bonjour, connard, the_vec.capacity());
-    println!("connard::{}", connard);
     pids.retain(|&p| p > 0i32);
     pids.reverse();
     pids }}
 
 fn proc_get_pids<'a>(flag: Pid, pid: libc::pid_t) -> Option<Vec<libc::pid_t>>
 { unsafe
-  { let mut the_vec: Vec<libc::pid_t> = Vec::with_capacity(Pid::MAXCHILDS as usize);
+  { let mut the_vec: Vec<libc::pid_t> = Vec::with_capacity(Proz::MAXCHILDS as usize);
     let bonjour = the_vec.as_ptr() as *mut libc::c_void;
     let kappa = (the_vec.capacity() * std::mem::size_of::<libc::pid_t>()) as i32;
     match flag
@@ -106,6 +164,7 @@ impl Baum
 { fn new(pid: libc::pid_t) -> Self
   { let pids = proc_get_pids(Pid::PROC_CHILD_PIDS, pid);
     let mut childs = Vec::new();
+    proc_get_info(pid);
     match pids
     { Some(vec) =>
       { for i in vec
@@ -120,22 +179,28 @@ impl Default for Baum
 fn baum_printer(baum: Baum)
 { unsafe
   { static mut nb: u32 = 0;
+    static mut pl: char = '|';
+    if baum.pid > 0
+    { for _ in 0..(nb + 1)
+      { print!(" "); }
+      print!("{}--= ", pl);
+      pl = '|';
+      println!("{}", baum.pid); }
     if !baum.childs.is_empty()
-    { for i in 0..nb
-      { print!("|"); }
-      nb += 1;
-      println!("pid::{}\n", baum.pid);
+    { if baum.pid > 0
+      { nb += 1;
+        pl = '\\'; }
       let k = baum.childs.clone();
+      let len = k.capacity();
       for i in k
       { baum_printer(i); }}
     else
-    { for i in 0..nb
-      { print!("|"); }
-      println!("pid::{}", baum.pid); }}}
+    { nb = 0; }}}
 
 fn main()
 { unsafe
-  { let _x = Baum::new(libc::getppid());
+  { println!("size::{}", std::mem::size_of::<ProcBsdInfo>());
+    let _x = Baum::default();
     baum_printer(_x);
-    while true
-    {;} }}
+    println!("THE::{}", libc::getpid());
+    while true {;} }}

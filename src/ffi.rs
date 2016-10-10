@@ -2,23 +2,23 @@ use ::libc;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub enum Pid {
-  PROC_ALL_PIDS = 0x01,
+pub enum Pid
+{ PROC_ALL_PIDS = 0x01,
+  PROC_PIDTBSDINFO = 0x03,
   PROC_CHILD_PIDS = 0x07,
   MAXCOMLEN = 0x10,
   MAXPATHLEN = 0xFF,
   PROC_PIDPATHINFO_MAXSIZE = 4 * 0xFF,
-  MAXCHILDS = 4096,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub enum Proz {
-  EPROC_CTTY = 0x01,
+pub enum Proz
+{ EPROC_CTTY = 0x01,
   EPROC_SLEADER = 0x02,
   WMESGLEN = 0x07,
   COMAPT_MAXLOGNAME = 0x0C,
-}
+  MAXCHILDS = 100, }
 
 /*
 pub unsafe extern fn sysctl(name: *mut c_int, namelen: c_uint, oldp: *mut c_void, oldlenp: *mut size_t, newp: *mut c_void, newlen: size_t) -> c_int
@@ -107,46 +107,46 @@ enum Union
 
 #[repr(C)]
 pub struct KpProc<'a>
-{ p_un:                 Union::P_Un,
-  p_vmspace:            *mut VmSpace,
-  p_sigacts:            *mut SigActs,
-  p_flag:               libc::c_int,
-  p_stat:               libc::c_char,
-  p_pid:                libc::pid_t,
-  p_oppid:              libc::pid_t,
-  p_dupfd:              libc::c_int,
-  user_stack:           *mut libc::c_char,
-  exit_thread:          *mut libc::c_void,
-  p_debugger:           libc::c_int,
-  sigwait:              libc::c_uint,
-  p_estcpu:             libc::c_uint,
-  p_cpticks:            libc::c_int,
-  p_pctcpu:             libc::uint32_t,
-  p_wchan:              *mut libc::c_void,
-  p_wmesg:              *mut libc::c_char,
-  p_swtime:             libc::c_uint,
-  p_slptime:            libc::c_uint,
-  p_realtimer:          ItimerVal,
-  p_rtime:              libc::timeval,
-  p_uticks:             libc::uint64_t,
-  p_sticks:             libc::uint64_t,
-  p_iticks:             libc::uint64_t,
-  p_traceflag:          libc::c_int,
-  p_tracep:             Vnode,
-  p_siglist:            libc::c_int,
-  p_textvp:             Vnode,
-  p_holdcnt:            libc::c_int,
-  p_sigmask:            libc::sigset_t,
-  p_sigignore:          libc::sigset_t,
-  p_sigcatch:           libc::sigset_t,
-  p_priority:           libc::c_uchar,
-  p_usrpri:             libc::c_uchar,
-  p_nice:               libc::c_char,
-  p_pgrp:               *mut Pgrp,
-  p_addr:               *mut User,
-  p_xstat:              libc::c_ushort,
-  p_acflag:             libc::c_ushort,
-  p_ru:                 *mut Rusage, }
+{ pub p_un:             Union::P_Un,
+  pub p_vmspace:        *mut VmSpace,
+  pub p_sigacts:        *mut SigActs,
+  pub p_flag:           libc::c_int,
+  pub p_stat:           libc::c_char,
+  pub p_pid:            libc::pid_t,
+  pub p_oppid:          libc::pid_t,
+  pub p_dupfd:          libc::c_int,
+  pub user_stack:       *mut libc::c_char,
+  pub exit_thread:      *mut libc::c_void,
+  pub p_debugger:       libc::c_int,
+  pub sigwait:          libc::c_uint,
+  pub p_estcpu:         libc::c_uint,
+  pub p_cpticks:        libc::c_int,
+  pub p_pctcpu:         libc::uint32_t,
+  pub p_wchan:          *mut libc::c_void,
+  pub p_wmesg:          *mut libc::c_char,
+  pub p_swtime:         libc::c_uint,
+  pub p_slptime:        libc::c_uint,
+  pub p_realtimer:      ItimerVal,
+  pub p_rtime:          libc::timeval,
+  pub p_uticks:         libc::uint64_t,
+  pub p_sticks:         libc::uint64_t,
+  pub p_iticks:         libc::uint64_t,
+  pub p_traceflag:      libc::c_int,
+  pub p_tracep:         Vnode,
+  pub p_siglist:        libc::c_int,
+  pub p_textvp:         Vnode,
+  pub p_holdcnt:        libc::c_int,
+  pub p_sipub gmask:    libc::sigset_t,
+  pub p_sigignore:      libc::sigset_t,
+  pub p_sigcatch:       libc::sigset_t,
+  pub p_priority:       libc::c_uchar,
+  pub p_usrpri:         libc::c_uchar,
+  pub p_nice:           libc::c_char,
+  pub p_pgrp:           *mut Pgrp,
+  pub p_addr:           *mut User,
+  pub p_xstat:          libc::c_ushort,
+  pub p_acflag:         libc::c_ushort,
+  pub p_ru:             *mut Rusage, }
 
 #[repr(C)]
 pub struct KinfoProc
@@ -176,8 +176,8 @@ pub struct ProcBsdInfo
   pub e_tdev:           libc::uint32_t,
   pub e_tpgid:          libc::uint32_t,
   pub pbi_nice:         libc::uint32_t,
-  pub pbi_start_tvsec:  libc::uint32_t,
-  pub pbi_start_tvusec: libc::uint32_t, }
+  pub pbi_start_tvsec:  libc::uint64_t,
+  pub pbi_start_tvusec: libc::uint64_t, }
 
 //int proc_pidinfo(int pid, int flavor, uint64_t arg,  void *buffer, int buffersize)
 //int proc_listchildpids(pid_t ppid, void * buffer, int buffersize)
