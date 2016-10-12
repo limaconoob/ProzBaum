@@ -154,36 +154,8 @@ pub struct KinfoProc
   pub kp_eproc:         EProc, }
 */
 
-#[repr(C)]
-pub struct ProcBsdInfo
-{ pub pbi_flags:        libc::uint32_t,
-  pub pbi_status:       libc::uint32_t,
-  pub pbi_xstatus:      libc::uint32_t,
-  pub pbi_pid:          libc::uint32_t,
-  pub pbi_ppid:         libc::uint32_t,
-  pub pbi_uid:          libc::uid_t,
-  pub pbi_gid:          libc::gid_t,
-  pub pbi_ruid:         libc::uid_t,
-  pub pbi_rgid:         libc::gid_t,
-  pub pbi_svuid:        libc::uid_t,
-  pub pbi_svgid:        libc::gid_t,
-  pub rfu_1:            libc::uint32_t,
-  pub pbi_comm:         [libc::c_char; Pid::MAXCOMLEN as usize],
-  pub pbi_name:         [libc::c_char; 2 * Pid::MAXCOMLEN as usize],
-  pub pbi_nfiles:       libc::uint32_t,
-  pub pbi_pgid:         libc::uint32_t,
-  pub pbi_pjobc:        libc::uint32_t,
-  pub e_tdev:           libc::uint32_t,
-  pub e_tpgid:          libc::uint32_t,
-  pub pbi_nice:         libc::uint32_t,
-  pub pbi_start_tvsec:  libc::uint64_t,
-  pub pbi_start_tvusec: libc::uint64_t, }
-
-//int proc_pidinfo(int pid, int flavor, uint64_t arg,  void *buffer, int buffersize)
-//int proc_listchildpids(pid_t ppid, void * buffer, int buffersize)
-
 #[cfg(target_os = "macos")]
 extern "C"
 { pub fn proc_listchildpids(_ppid: libc::pid_t, _buff: *mut libc::c_void, _size: libc::c_int) -> libc::c_int;
-  pub fn proc_pidpath(_pid: libc::c_int, _buff: &[libc::c_char], _size: libc::uint32_t) -> libc::c_int;
+  pub fn proc_pidpath(_pid: libc::c_int, _buff: *mut libc::c_void, _size: libc::uint32_t) -> libc::c_int;
   pub fn proc_pidinfo(_pid: libc::c_int, _flav: libc::c_int, _arg: libc::uint64_t, _buff: *mut libc::c_void, _size: libc::c_int) -> libc::c_int; }
