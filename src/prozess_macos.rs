@@ -10,19 +10,20 @@ use proc_bsdinfo::{ProcBsdInfo};
 //char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
 //proc_pidpath(pid, pathbuf, sizeof(pathbuf));
 
-pub fn proc_get_info(pid: libc::pid_t) -> Option<(ProcBsdInfo, String)>
+pub fn proc_get_info(pid: libc::pid_t) -> Option<ProcBsdInfo/*, String)*/>
 { unsafe
   { let size = std::mem::size_of::<ProcBsdInfo>();
     let mut proz: Vec<u8> = Vec::with_capacity(size);
-    let mut pathbuf: Vec<u8> = Vec::with_capacity(Pid::PROC_PIDPATHINFO_MAXSIZE as usize);
+//    let mut pathbuf: Vec<u8> = Vec::with_capacity(Pid::PROC_PIDPATHINFO_MAXSIZE as usize);
     let bonjour = proz.as_ptr() as *mut libc::c_void;
+//    let coucou = pathbuf.as_ptr() as *mut libc::c_void;
     let ret = proc_pidinfo(pid, Pid::PROC_PIDTBSDINFO as i32, 0, bonjour, size as i32);
-    let coucou = pathbuf.as_ptr() as *mut libc::c_void;
-    let tek = proc_pidpath(pid, coucou, Pid::PROC_PIDPATHINFO_MAXSIZE as u32);
+//    let tek = proc_pidpath(pid, coucou, Pid::PROC_PIDPATHINFO_MAXSIZE as u32);
     if ret > 0
     { proz = Vec::from_raw_parts(bonjour as *mut u8, size, proz.capacity());
-      pathbuf = Vec::from_raw_parts(coucou as *mut u8, Pid::PROC_PIDPATHINFO_MAXSIZE as usize, pathbuf.capacity());
-      return Some((ProcBsdInfo::new(proz), u8_to_string(&pathbuf, pathbuf.capacity() as usize))) }
+//      pathbuf = Vec::from_raw_parts(coucou as *mut u8, Pid::PROC_PIDPATHINFO_MAXSIZE as usize, pathbuf.capacity());
+      return Some(ProcBsdInfo::new(proz)); }
+//      return Some((ProcBsdInfo::new(proz), u8_to_string(&pathbuf, pathbuf.capacity() as usize))) }
     else
     { None }}}
 
