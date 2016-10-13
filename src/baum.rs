@@ -1,9 +1,44 @@
 
 use libc;
 use ffi::{Pid};
-use prozess_macos::{proc_get_pids};
+use prozess_macos::{proc_get_pids, proc_get_info};
+use proc_bsdinfo::{ProcBsdInfo};
 
-fn pid_in_baum(pid: libc::pid_t, baum: &Baum) -> bool
+#[derive(Debug)]
+pub enum Status
+{ ///Processus sur lequel on est
+  Courant,
+  ///Processus actif
+  Actif,
+  ///Processus suspendu > Ctrl+Z
+  Suspendu,
+  ///Processus zombie > yes 1&>/dev/null &
+  Zombie,
+  ///Processus inexistant
+  Inexistant,
+  ///Etat non implémenté
+  Autre, }
+
+pub fn zustand(pid: libc::pid_t) -> Status
+{ let info: Option<ProcBsdInfo> = proc_get_info(pid);
+  match info
+  { Some(proz) =>
+      { match (proz.pbi_status, proz.pbi_nice)
+        { (2, 0) =>
+          { unsafe 
+            { let cur_pid = libc::getpid();
+              let cur_baum = Baum::new(cur_pid);
+              let baum = Baum::new(pid);
+              if !pid_in_baum(pid, &cur_baum) || !baum.childs.is_empty()
+              { Status::Actif }
+              else
+              { Status::Courant }}},
+          (4, 0) => Status::Suspendu,
+          (2, 5) => Status::Zombie,
+          (_, _) => Status::Autre, }},
+    None => Status::Inexistant, }}
+
+pub fn pid_in_baum(pid: libc::pid_t, baum: &Baum) -> bool
 { if baum.pid == pid
   { true }
   else if !baum.childs.is_empty() 
@@ -40,35 +75,38 @@ impl Default for Baum
 impl BaumBenutz for Baum
 { fn vergleich(&self, baum: Baum) -> (Vec<libc::pid_t>, Vec<libc::pid_t>)
   { unsafe
-    { fn checker(get: &Baum, baum: Baum, pids: &mut Vec<libc::pid_t>)
+    { fn checker(get: &Baum, baum: &Baum, pids: &mut Vec<libc::pid_t>)
       { if !pid_in_baum(baum.pid, get)
         { pids.push(baum.pid); }
         if !baum.childs.is_empty()
-        { for i in baum.childs
-          { checker(get, i, pids); }}}
+        { baum.childs.iter().map(|x| checker(get, x, pids)); }}
       let mut in_pids: Vec<libc::pid_t> = Vec::new();
       let mut out_pids: Vec<libc::pid_t> = Vec::new();
-      checker(self, baum.clone(), &mut out_pids);
-      checker(&baum, self.clone(), &mut in_pids);
+      checker(self, &baum, &mut out_pids);
+      checker(&baum, self, &mut in_pids);
       (in_pids, out_pids) }}
   
   fn anzeigt(&self)
   { unsafe
     { static mut nb: u32 = 0;
       static mut pl: char = '|';
+      static mut tmp: u32 = 0;
       if self.pid > 0
       { {0..nb + 1}.all(|_|
         { print!(" ");
           true });
-        print!("{}--= ", pl);
+        let c = if !self.childs.is_empty() {'+'} else {'-'};
+        print!("{}{}-= ", pl, c);
         pl = '|';
-        println!("{}", self.pid); }
+        println!("{} {:?}", self.pid, zustand(self.pid)); }
       if !self.childs.is_empty()
       { if self.pid > 0
         { nb += 1;
-          pl = '\\'; }
+          tmp = nb; }
         {0.. self.childs.len()}.all(|i|
-        { self.childs[i].anzeigt();
+        { if i == self.childs.len() - 1
+          { pl = '\\'; }
+          self.childs[i].anzeigt();
           true }); }
       else
       { nb = 0; }}}}
