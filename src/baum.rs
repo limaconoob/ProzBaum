@@ -7,17 +7,17 @@ use proc_bsdinfo::{ProcBsdInfo};
 #[derive(Debug)]
 pub enum Status
 { ///Processus sur lequel on est
-  Courant,
+  Current,
   ///Processus actif
-  Actif,
+  Active,
   ///Processus suspendu > Ctrl+Z
-  Suspendu,
+  Suspend,
   ///Processus zombie > yes 1&>/dev/null &
   Zombie,
   ///Processus inexistant
-  Inexistant,
+  Unexistant,
   ///Etat non implémenté
-  Autre, }
+  Other, }
 
 pub fn zustand(pid: libc::pid_t) -> Status
 { let info: Option<ProcBsdInfo> = proc_get_info(pid);
@@ -30,13 +30,13 @@ pub fn zustand(pid: libc::pid_t) -> Status
               let cur_baum = Baum::new(cur_pid);
               let baum = Baum::new(pid);
               if !pid_in_baum(pid, &cur_baum) || !baum.childs.is_empty()
-              { Status::Actif }
+              { Status::Active }
               else
-              { Status::Courant }}},
-          (4, 0) => Status::Suspendu,
+              { Status::Current }}},
+          (4, 0) => Status::Suspend,
           (2, 5) => Status::Zombie,
-          (_, _) => Status::Autre, }},
-    None => Status::Inexistant, }}
+          (_, _) => Status::Other, }},
+    None => Status::Unexistant, }}
 
 pub fn pid_in_baum(pid: libc::pid_t, baum: &Baum) -> bool
 { if baum.pid == pid
@@ -45,6 +45,20 @@ pub fn pid_in_baum(pid: libc::pid_t, baum: &Baum) -> bool
   { baum.childs.iter().find(|&b| pid_in_baum(pid, b)).is_some() }
   else
   { false }}
+
+pub fn current_pid() -> libc::pid_t
+{ unsafe
+  { fn currpid(baum: &Baum, pid: &mut libc::pid_t)
+    { match zustand(baum.pid)
+      { Status::Current => { *pid = baum.pid; },
+        _ => {}, }
+      if !baum.childs.is_empty()
+      { baum.childs.iter().map(|i|
+          { currpid(i, pid);
+            true }); }}
+      let mut pid: libc::pid_t = 0;
+      currpid(&Baum::new(libc::getpid()), &mut pid);
+      pid }}
 
 pub trait BaumBenutz
 { fn vergleich(&self, baum: Baum) -> (Vec<libc::pid_t>, Vec<libc::pid_t>);

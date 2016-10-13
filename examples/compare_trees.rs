@@ -1,7 +1,7 @@
-extern crate top;
+extern crate baum;
 extern crate libc;
 
-use top::baum::{Baum, BaumBenutz};
+use baum::baum::{Baum, BaumBenutz};
 
 ///Compare deux arbres de pids, In sont les pids créés, Out sont ceux détruits
 fn main()

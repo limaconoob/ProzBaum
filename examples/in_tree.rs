@@ -1,7 +1,7 @@
-extern crate top;
+extern crate baum;
 extern crate libc;
 
-use top::baum::{Baum, pid_in_baum};
+use baum::baum::{Baum, pid_in_baum};
 
 ///Constate que le pid courant est dans la liste de tous les pids
 fn main()

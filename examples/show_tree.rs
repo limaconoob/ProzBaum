@@ -1,7 +1,7 @@
-extern crate top;
+extern crate baum;
 extern crate libc;
 
-use top::baum::{Baum, BaumBenutz};
+use baum::baum::{Baum, BaumBenutz};
 
 ///Affiche la liste de tous les pids avec leur status.
 fn main()
