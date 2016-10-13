@@ -1,7 +1,7 @@
 
 use libc;
 use ffi::{Pid};
-use prozess_macos::{proc_get_pids, proc_get_info};
+use process_macos::{proc_get_pids, proc_get_info};
 use proc_bsdinfo::{ProcBsdInfo};
 
 #[derive(Debug)]
@@ -14,8 +14,6 @@ pub enum Status
   Suspend,
   ///Processus zombie > yes 1&>/dev/null &
   Zombie,
-  ///Processus inexistant
-  Unexistant,
   ///Etat non implémenté
   Other, }
 
@@ -36,7 +34,7 @@ pub fn zustand(pid: libc::pid_t) -> Status
           (4, 0) => Status::Suspend,
           (2, 5) => Status::Zombie,
           (_, _) => Status::Other, }},
-    None => Status::Unexistant, }}
+    None => Status::Other, }}
 
 pub fn pid_in_baum(pid: libc::pid_t, baum: &Baum) -> bool
 { if baum.pid == pid
@@ -86,20 +84,28 @@ impl Default for Baum
 { fn default() -> Baum
   { Baum { pid: 0, childs: vec![Baum::new(0)], }}}
 
+impl PartialEq for Baum
+{ fn eq(&self, baum: &Baum) -> bool
+  { if self.pid != baum.pid
+    { false }
+    else if !baum.childs.is_empty() 
+    { !baum.childs.iter().find(|b| self.eq(b)).is_some() }
+    else
+    { true }}}
+
 impl BaumBenutz for Baum
 { fn vergleich(&self, baum: Baum) -> (Vec<libc::pid_t>, Vec<libc::pid_t>)
-  { unsafe
-    { fn checker(get: &Baum, baum: &Baum, pids: &mut Vec<libc::pid_t>)
-      { if !pid_in_baum(baum.pid, get)
-        { pids.push(baum.pid); }
-        if !baum.childs.is_empty()
-        { baum.childs.iter().map(|x| checker(get, x, pids)); }}
-      let mut in_pids: Vec<libc::pid_t> = Vec::new();
-      let mut out_pids: Vec<libc::pid_t> = Vec::new();
-      checker(self, &baum, &mut out_pids);
-      checker(&baum, self, &mut in_pids);
-      (in_pids, out_pids) }}
-  
+  { fn checker(get: &Baum, baum: &Baum, pids: &mut Vec<libc::pid_t>)
+    { if !pid_in_baum(baum.pid, get)
+      { pids.push(baum.pid); }
+      if !baum.childs.is_empty()
+      { baum.childs.iter().map(|x| checker(get, x, pids)); }}
+    let mut in_pids: Vec<libc::pid_t> = Vec::new();
+    let mut out_pids: Vec<libc::pid_t> = Vec::new();
+    checker(self, &baum, &mut out_pids);
+    checker(&baum, self, &mut in_pids);
+    (in_pids, out_pids) }
+
   fn anzeigt(&self)
   { unsafe
     { static mut nb: u32 = 0;

@@ -1,8 +1,8 @@
 
-extern crate top;
+extern crate baum;
 extern crate libc;
 
-use self::top::convert::{u8_to_u32, u8_to_u64, u8_to_string};
+use self::baum::convert::{u8_to_u32, u8_to_u64, u8_to_string};
 
 #[test]
 fn conversions()
