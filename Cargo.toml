@@ -1,15 +1,18 @@
 [package]
-name = "baum"
+name = "baum-rs"
 version = "0.1.0"
-authors = ["Jeremy PEPIN <jpepin@student.42.fr>"]
-
-[dependencies.libc]
-version       = "0.2"
 
 [[bin]]
-name = "baum"
+name = "baum-rs"
 test = false
 
 [lib]
 test = false
 doctest = false
+
+[dependencies.libc]
+version = "0.2"
+
+[dependencies.clippy]
+version = "*"
+optional = true

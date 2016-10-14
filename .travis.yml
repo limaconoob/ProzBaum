@@ -1,26 +1,21 @@
 sudo: false
 language: rust
 rust: 
-- nightly
-- stable
-- beta
+  - nightly
+  - stable
+  - beta
 branches:
-except:
-env:
-global:
-- PATH="$PATH:$TRAVIS_BUILD_DIR/target/debug"
-- RUST_BACKTRACE="1"
+  except:
+    env:
+      global:
+        - PATH="$PATH:$TRAVIS_BUILD_DIR/target/debug"
+        - RUST_BACKTRACE="1"
 cache:
-directories:
-- $TRAVIS_BUILD_DIR/target
-- $HOME/.cargo
+  directories:
+    - $TRAVIS_BUILD_DIR/target
+    - $HOME/.cargo
 os:
-- osx
+  - osx
 script:
-- cargo build --verbose
-- cargo test
-- cargo run --example compare_trees
-- cargo run --example in_tree
-- cargo run --example show_tree
-- cargo run --example get_cur_pid
-- cargo run --example print_info
+  - cargo build --verbose
+  - cargo run
